@@ -1,9 +1,7 @@
 package com.example.demo.netty;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -12,6 +10,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+
 
 /**
  * @program: demo
@@ -23,7 +22,7 @@ import java.net.InetSocketAddress;
 public class HelloClient {
     @SneakyThrows
     public static void main(String[] args) {
-        new Bootstrap()
+        ChannelFuture future = new Bootstrap()
                 .group(new NioEventLoopGroup())
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<NioSocketChannel>() {
@@ -32,9 +31,20 @@ public class HelloClient {
                         ch.pipeline().addLast(new StringEncoder());
                     }
                 })
-                .connect(new InetSocketAddress("localhost",8888))
-                .sync()
-                .channel()
-                .writeAndFlush("hello world");
+                .connect(new InetSocketAddress("localhost", 8888));
+//                future.sync();
+        future.addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                Channel channel = future.channel();
+                log.debug("{}",channel+"test");
+                channel.writeAndFlush("hello2");
+            }
+        });
+        Channel channel = future.channel();
+        channel.writeAndFlush("hello2");
+        System.out.println('1');
+//        channel.writeAndFlush("hello3");
+//        channel.writeAndFlush("hello4");
     }
 }
