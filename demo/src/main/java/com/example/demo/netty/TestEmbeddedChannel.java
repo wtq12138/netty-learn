@@ -1,8 +1,12 @@
 package com.example.demo.netty;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -14,38 +18,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TestEmbeddedChannel {
     public static void main(String[] args) {
-        ChannelInboundHandlerAdapter c1=new ChannelInboundHandlerAdapter() {
-            @Override
-            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                log.debug("1111");
-                super.channelRead(ctx, msg);
-            }
-        };
-        ChannelInboundHandlerAdapter c2=new ChannelInboundHandlerAdapter() {
-            @Override
-            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                log.debug("2222");
-                super.channelRead(ctx, msg);
-            }
-        };
-        ChannelOutboundHandlerAdapter c3=new ChannelOutboundHandlerAdapter() {
+        EmbeddedChannel embeddedChannel=new EmbeddedChannel(
+                new LengthFieldBasedFrameDecoder(1024,0,4,0,0)
+                , new LoggingHandler(LogLevel.DEBUG));
+        ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer();
+        senMessage(buffer,"hello,world");
+        senMessage(buffer,"hello");
+        embeddedChannel.writeInbound(buffer);
+    }
 
-            @Override
-            public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-                log.debug("3333");
-                super.write(ctx, msg, promise);
-            }
-        };
-        ChannelOutboundHandlerAdapter c4=new ChannelOutboundHandlerAdapter() {
-
-            @Override
-            public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-                log.debug("4444");
-                super.write(ctx, msg, promise);
-            }
-        };
-        EmbeddedChannel embeddedChannel=new EmbeddedChannel(c1,c2,c3,c4);
-        embeddedChannel.writeInbound(ByteBufAllocator.DEFAULT.buffer().writeBytes("hh".getBytes()));
-        embeddedChannel.writeOutbound(ByteBufAllocator.DEFAULT.buffer().writeBytes("hh".getBytes()));
+    private static void senMessage(ByteBuf buffer, String s) {
+        byte[] bytes= s.getBytes();
+        int len=bytes.length;
+        buffer.writeInt(len);
+        buffer.writeBytes(bytes);
     }
 }
