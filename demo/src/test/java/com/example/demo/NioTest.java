@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @create: 2022-05-02 10:30
  */
 @SpringBootTest
-public class Test2 {
+public class NioTest {
     @Autowired
     NioServer nioServer;
     @Autowired
